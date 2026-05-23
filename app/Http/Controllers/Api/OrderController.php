@@ -50,7 +50,8 @@ class OrderController extends Controller
         ]);
 
         return DB::transaction(function () use ($data) {
-            $orderNumber = 'ORD' . str_pad(Order::count() + 1, 5, '0', STR_PAD_LEFT);
+            $lastNumber = Order::max(DB::raw("CAST(SUBSTRING(order_number, 4) AS UNSIGNED)")) ?? 0;
+            $orderNumber = 'ORD' . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
             $order = Order::create([...$data, 'order_number' => $orderNumber]);
             $order->items()->createMany($data['items']);
 
