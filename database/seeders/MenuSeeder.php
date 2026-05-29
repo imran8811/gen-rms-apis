@@ -42,6 +42,7 @@ class MenuSeeder extends Seeder
                 $prices         = $isSized ? json_encode($item['prices'] ?? []) : null;
                 $priceType      = $isSized ? 'sized' : 'single';
                 $pizzaSelection = isset($item['pizzaSelection']) ? json_encode($item['pizzaSelection']) : null;
+                $dealExtras     = isset($item['dealExtras'])     ? json_encode($item['dealExtras'])     : null;
 
                 DB::table('menu_items')->insert([
                     'category_id'    => $categoryId,
@@ -52,6 +53,7 @@ class MenuSeeder extends Seeder
                     'price'          => $price,
                     'prices'         => $prices,
                     'pizza_selection'=> $pizzaSelection,
+                    'deal_extras'    => $dealExtras,
                     'default_size'   => $item['defaultSize'] ?? null,
                     'tag'            => $item['tag'] ?? null,
                     'is_special'     => !empty($item['special']),

@@ -33,6 +33,7 @@ class CategoryController extends Controller
                 'special'        => $item->is_special ?: null,
                 'signature'      => $item->is_signature ?: null,
                 'pizzaSelection' => $item->pizza_selection,
+                'dealExtras'     => $item->deal_extras,
                 'defaultSize'    => $item->default_size,
             ], fn($v) => $v !== null)),
         ]));
