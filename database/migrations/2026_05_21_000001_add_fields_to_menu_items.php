@@ -8,9 +8,15 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('menu_items', function (Blueprint $table) {
-            $table->string('slug')->nullable()->unique()->after('name');
-            $table->json('pizza_selection')->nullable()->after('prices');
-            $table->string('default_size')->nullable()->after('pizza_selection');
+            if (!Schema::hasColumn('menu_items', 'slug')) {
+                $table->string('slug')->nullable()->unique()->after('name');
+            }
+            if (!Schema::hasColumn('menu_items', 'pizza_selection')) {
+                $table->json('pizza_selection')->nullable()->after('prices');
+            }
+            if (!Schema::hasColumn('menu_items', 'default_size')) {
+                $table->string('default_size')->nullable()->after('pizza_selection');
+            }
         });
     }
 

@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('menu_items', function (Blueprint $table) {
-            $table->json('deal_extras')->nullable()->after('pizza_selection');
-        });
+        if (!Schema::hasColumn('menu_items', 'deal_extras')) {
+            Schema::table('menu_items', function (Blueprint $table) {
+                $table->json('deal_extras')->nullable()->after('pizza_selection');
+            });
+        }
 
         // Backfill deal_extras for existing deal items
         $deals = [
