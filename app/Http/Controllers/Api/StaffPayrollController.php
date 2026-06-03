@@ -15,11 +15,18 @@ class StaffPayrollController extends Controller
     public function index(Request $request): JsonResponse
     {
         $month       = $request->get('month', now()->format('Y-m'));
-        $workingDays = (int) $request->get('working_days', 26);
+        $workingDays = (int) $request->get('working_days', 30);
 
         [$year, $mon] = explode('-', $month);
 
-        $allStaff = Staff::where('is_active', true)->orderBy('name')->get();
+        $monthEnd = \Carbon\Carbon::createFromDate($year, $mon, 1)->endOfMonth()->toDateString();
+
+        $allStaff = Staff::where('is_active', true)
+            ->where(function ($q) use ($monthEnd) {
+                $q->whereNull('join_date')->orWhere('join_date', '<=', $monthEnd);
+            })
+            ->orderBy('name')
+            ->get();
 
         $payroll = $allStaff->map(function (Staff $staff) use ($year, $mon, $month, $workingDays) {
             $base      = $staff->salary;
