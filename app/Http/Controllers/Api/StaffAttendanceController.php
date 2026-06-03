@@ -31,11 +31,11 @@ class StaffAttendanceController extends Controller
     public function bulkStore(Request $request): JsonResponse
     {
         $request->validate([
-            'date'                 => 'required|date',
-            'records'              => 'required|array|min:1',
-            'records.*.staff_id'   => 'required|exists:staff,id',
-            'records.*.status'     => 'required|in:present,absent,half_day,late',
-            'records.*.notes'      => 'nullable|string|max:200',
+            'date'                        => 'required|date',
+            'records'                     => 'required|array|min:1',
+            'records.*.staff_id'          => 'required|exists:staff,id',
+            'records.*.status'            => 'required|in:present,absent,half_day,late',
+            'records.*.check_in_time'     => 'nullable|date_format:H:i,H:i:s',
         ]);
 
         $date  = $request->date;
@@ -44,7 +44,7 @@ class StaffAttendanceController extends Controller
         foreach ($request->records as $rec) {
             $saved[] = StaffAttendance::updateOrCreate(
                 ['staff_id' => $rec['staff_id'], 'date' => $date],
-                ['status' => $rec['status'], 'notes' => $rec['notes'] ?? null]
+                ['status' => $rec['status'], 'check_in_time' => $rec['check_in_time'] ?? null]
             );
         }
 
