@@ -17,6 +17,9 @@ class StaffAttendanceController extends Controller
         if ($request->has('date')) {
             $query->where('date', $request->date);
         }
+        if ($request->has('from') && $request->has('to')) {
+            $query->whereBetween('date', [$request->from, $request->to]);
+        }
         if ($request->has('month')) {
             [$year, $mon] = explode('-', $request->month);
             $query->whereYear('date', $year)->whereMonth('date', $mon);
@@ -38,17 +41,30 @@ class StaffAttendanceController extends Controller
             'records.*.check_in_time'     => 'nullable|date_format:H:i,H:i:s',
         ]);
 
-        $date  = $request->date;
-        $saved = [];
+        $date = $request->date;
+        $now  = now();
 
-        foreach ($request->records as $rec) {
-            $saved[] = StaffAttendance::updateOrCreate(
-                ['staff_id' => $rec['staff_id'], 'date' => $date],
-                ['status' => $rec['status'], 'check_in_time' => $rec['check_in_time'] ?? null]
-            );
-        }
+        $rows = array_map(fn ($rec) => [
+            'staff_id'      => $rec['staff_id'],
+            'date'          => $date,
+            'status'        => $rec['status'],
+            'check_in_time' => $rec['check_in_time'] ?: null,
+            'created_at'    => $now,
+            'updated_at'    => $now,
+        ], $request->records);
 
-        return response()->json($saved, 201);
+        StaffAttendance::upsert(
+            $rows,
+            ['staff_id', 'date'],
+            ['status', 'check_in_time', 'updated_at']
+        );
+
+        $staffIds = array_column($request->records, 'staff_id');
+
+        return response()->json(
+            StaffAttendance::where('date', $date)->whereIn('staff_id', $staffIds)->get(),
+            201
+        );
     }
 
     public function summary(Request $request): JsonResponse

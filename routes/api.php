@@ -5,8 +5,8 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\SalesController;
+use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\VendorController;
-use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\CustomerController;
@@ -32,8 +32,13 @@ Route::get('sales/by-category', [SalesController::class, 'byCategory']);
 Route::get('sales/by-day',      [SalesController::class, 'byDay']);
 
 // Purchasing
-Route::apiResource('vendors',          VendorController::class);
-Route::apiResource('purchase-orders',  PurchaseOrderController::class);
+Route::get('purchases',               [PurchaseController::class, 'index']);
+Route::post('purchases',              [PurchaseController::class, 'store']);
+Route::delete('purchases/{purchase}', [PurchaseController::class, 'destroy']);
+
+// Vendors
+Route::get('vendors',  [VendorController::class, 'index']);
+Route::post('vendors', [VendorController::class, 'store']);
 
 // Inventory
 Route::get('inventory',           [InventoryController::class, 'index']);
