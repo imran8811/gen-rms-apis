@@ -13,17 +13,20 @@ class SalesController extends Controller
 {
     public function summary(Request $request): JsonResponse
     {
-        $period = $request->get('period', 'today');
-
         $query = Order::where('status', 'completed');
 
-        match ($period) {
-            'today' => $query->whereDate('created_at', today()),
-            'week'  => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]),
-            'month' => $query->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year),
-            'year'  => $query->whereYear('created_at', now()->year),
-            default => $query->whereDate('created_at', today()),
-        };
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        } else {
+            $period = $request->get('period', 'today');
+            match ($period) {
+                'today' => $query->whereDate('created_at', today()),
+                'week'  => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]),
+                'month' => $query->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year),
+                'year'  => $query->whereYear('created_at', now()->year),
+                default => $query->whereDate('created_at', today()),
+            };
+        }
 
         $orders   = $query->get();
         $revenue  = $orders->sum('total');
