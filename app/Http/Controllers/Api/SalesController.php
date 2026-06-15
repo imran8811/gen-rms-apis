@@ -40,6 +40,15 @@ class SalesController extends Controller
 
         $foodpandaOrders = $orders->where('source', 'foodpanda');
 
+        // Orders placed within fixed Pakistan-time windows (hours are 24h).
+        // Timestamps are stored in UTC, so convert to the restaurant's local zone first.
+        $afternoonOrders = $orders->filter(
+            fn ($o) => in_array((int) $o->created_at->copy()->setTimezone('Asia/Karachi')->format('H'), [14, 15], true)
+        );
+        $eveningOrders = $orders->filter(
+            fn ($o) => in_array((int) $o->created_at->copy()->setTimezone('Asia/Karachi')->format('H'), [16, 17], true)
+        );
+
         return response()->json([
             'revenue'    => $revenue,
             'orders'     => $count,
@@ -49,6 +58,14 @@ class SalesController extends Controller
             'foodpanda'  => [
                 'orders'  => $foodpandaOrders->count(),
                 'revenue' => $foodpandaOrders->sum('total'),
+            ],
+            'window_2_4' => [
+                'orders'  => $afternoonOrders->count(),
+                'revenue' => $afternoonOrders->sum('total'),
+            ],
+            'window_4_6' => [
+                'orders'  => $eveningOrders->count(),
+                'revenue' => $eveningOrders->sum('total'),
             ],
         ]);
     }
