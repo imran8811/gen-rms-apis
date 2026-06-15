@@ -24,6 +24,7 @@ Route::apiResource('categories', CategoryController::class);
 Route::apiResource('menu-items', MenuItemController::class);
 
 // Orders / Billing
+Route::get('orders/next-number', [OrderController::class, 'nextNumber']);
 Route::apiResource('orders', OrderController::class);
 
 // Sales

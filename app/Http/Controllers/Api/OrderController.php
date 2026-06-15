@@ -31,6 +31,20 @@ class OrderController extends Controller
         return response()->json($query->paginate(50));
     }
 
+    /**
+     * Sequential bill number: starts at 3005 and increments by 1 per order.
+     */
+    private function computeNextNumber(): int
+    {
+        $lastNumber = (int) Order::max(DB::raw('CAST(order_number AS UNSIGNED)'));
+        return max($lastNumber + 1, 3005);
+    }
+
+    public function nextNumber(): JsonResponse
+    {
+        return response()->json(['next' => $this->computeNextNumber()]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -54,8 +68,7 @@ class OrderController extends Controller
         ]);
 
         return DB::transaction(function () use ($data) {
-            $lastNumber = Order::max(DB::raw("CAST(SUBSTRING(order_number, 4) AS UNSIGNED)")) ?? 0;
-            $orderNumber = 'ORD' . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+            $orderNumber = (string) $this->computeNextNumber();
             $data['source'] = $data['source'] ?? 'pos';
             $order = Order::create([...$data, 'order_number' => $orderNumber]);
             $order->items()->createMany($data['items']);
