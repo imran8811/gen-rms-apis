@@ -24,6 +24,9 @@ class OrderController extends Controller
         if ($request->has('order_type')) {
             $query->where('order_type', $request->order_type);
         }
+        if ($request->has('source')) {
+            $query->where('source', $request->source);
+        }
 
         return response()->json($query->paginate(50));
     }
@@ -32,6 +35,7 @@ class OrderController extends Controller
     {
         $data = $request->validate([
             'order_type'       => 'required|in:Dine-in,Takeaway,Delivery',
+            'source'           => 'nullable|in:pos,foodpanda',
             'customer_id'      => 'nullable|exists:customers,id',
             'subtotal'         => 'required|integer|min:0',
             'delivery_charge'  => 'integer|min:0',
@@ -52,6 +56,7 @@ class OrderController extends Controller
         return DB::transaction(function () use ($data) {
             $lastNumber = Order::max(DB::raw("CAST(SUBSTRING(order_number, 4) AS UNSIGNED)")) ?? 0;
             $orderNumber = 'ORD' . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+            $data['source'] = $data['source'] ?? 'pos';
             $order = Order::create([...$data, 'order_number' => $orderNumber]);
             $order->items()->createMany($data['items']);
 

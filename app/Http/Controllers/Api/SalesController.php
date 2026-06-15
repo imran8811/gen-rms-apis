@@ -38,12 +38,18 @@ class SalesController extends Controller
             'revenue' => $g->sum('total'),
         ]);
 
+        $foodpandaOrders = $orders->where('source', 'foodpanda');
+
         return response()->json([
             'revenue'    => $revenue,
             'orders'     => $count,
             'avg_value'  => $avgValue,
             'deliveries' => $orders->where('order_type', 'Delivery')->count(),
             'by_type'    => $byType,
+            'foodpanda'  => [
+                'orders'  => $foodpandaOrders->count(),
+                'revenue' => $foodpandaOrders->sum('total'),
+            ],
         ]);
     }
 
