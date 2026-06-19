@@ -18,6 +18,16 @@ use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\StaffLeaveController;
 use App\Http\Controllers\Api\StaffAdvanceController;
 use App\Http\Controllers\Api\StaffPayrollController;
+use App\Http\Controllers\Api\AuthController;
+
+// Auth (public)
+Route::post('login', [AuthController::class, 'login']);
+
+// Authenticated routes
+Route::middleware('auth:sanctum')->group(function () {
+
+Route::post('logout', [AuthController::class, 'logout']);
+Route::get('me', [AuthController::class, 'me']);
 
 // Menu
 Route::apiResource('categories', CategoryController::class);
@@ -92,6 +102,8 @@ Route::put('settings',  [SettingController::class, 'update']);
 // Expenses — summary must be before apiResource to avoid 'summary' being treated as an ID
 Route::get('expenses/summary', [ExpenseController::class, 'summary']);
 Route::apiResource('expenses', ExpenseController::class)->except(['show']);
+
+}); // end auth:sanctum group
 
 Route::get('/run-migration', function () {
     try {
