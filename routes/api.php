@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\SalesController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\RecipeController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\ReportController;
@@ -58,6 +59,21 @@ Route::put('inventory/{item}',    [InventoryController::class, 'update']);
 Route::delete('inventory/{item}', [InventoryController::class, 'destroy']);
 Route::post('inventory/adjust',   [InventoryController::class, 'adjust']);
 Route::get('inventory/movements', [InventoryController::class, 'movements']);
+
+// Costing / Recipes
+Route::get('costing/summary',           [RecipeController::class, 'summary']);
+Route::get('costing/ingredients',       [RecipeController::class, 'ingredients']);
+Route::post('costing/ingredients',      [RecipeController::class, 'storeIngredient']);
+Route::put('costing/ingredients/{item}', [RecipeController::class, 'updateIngredient']);
+Route::get('costing/menu-options',      [RecipeController::class, 'menuOptions']);
+Route::get('recipes',                   [RecipeController::class, 'index']);
+Route::post('recipes',                  [RecipeController::class, 'store']);
+Route::get('recipes/{recipe}',          [RecipeController::class, 'show']);
+Route::put('recipes/{recipe}',          [RecipeController::class, 'update']);
+Route::delete('recipes/{recipe}',       [RecipeController::class, 'destroy']);
+Route::post('recipes/{recipe}/lines',   [RecipeController::class, 'storeLine']);
+Route::put('recipe-lines/{line}',       [RecipeController::class, 'updateLine']);
+Route::delete('recipe-lines/{line}',    [RecipeController::class, 'destroyLine']);
 
 // Staff
 Route::apiResource('staff', StaffController::class);
@@ -111,5 +127,36 @@ Route::get('/run-migration', function () {
         return 'Database migrated successfully!';
     } catch (\Exception $e) {
         return 'Error: ' . $e->getMessage();
+    }
+});
+
+/**
+ * One-off seeding of the costing module (ingredients + recipes) for hosts
+ * without shell access. Token-guarded: set SEED_TOKEN in the production .env
+ * and call /api/run-costing-seed?token=<that value>. Remove this route once
+ * seeding is done.
+ */
+Route::get('/run-costing-seed', function (\Illuminate\Http\Request $request) {
+    $expected = env('SEED_TOKEN');
+    if (empty($expected)) {
+        return response()->json(['error' => 'Set SEED_TOKEN in the production .env first.'], 403);
+    }
+    if (!hash_equals($expected, (string) $request->query('token'))) {
+        return response()->json(['error' => 'Invalid or missing token.'], 403);
+    }
+    try {
+        Illuminate\Support\Facades\Artisan::call('db:seed', [
+            '--class' => 'Database\\Seeders\\CostIngredientsSeeder', '--force' => true,
+        ]);
+        Illuminate\Support\Facades\Artisan::call('db:seed', [
+            '--class' => 'Database\\Seeders\\CostingSeeder', '--force' => true,
+        ]);
+        return response()->json([
+            'ok'          => true,
+            'ingredients' => \App\Models\InventoryItem::count(),
+            'recipes'     => \App\Models\Recipe::count(),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 });
