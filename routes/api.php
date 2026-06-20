@@ -132,15 +132,13 @@ Route::get('/run-migration', function () {
 
 /**
  * One-off seeding of the costing module (ingredients + recipes) for hosts
- * without shell access. Token-guarded: set SEED_TOKEN in the production .env
- * and call /api/run-costing-seed?token=<that value>. Remove this route once
- * seeding is done.
+ * without shell access. Guarded by a hardcoded token (works even when the prod
+ * config is cached, which makes env() return null). Call:
+ *   /api/run-costing-seed?token=c7Kq2Zpr9Lx4Vn8Tm5Wb3Yh6Df0Ja1
+ * REMOVE this route once seeding is done.
  */
 Route::get('/run-costing-seed', function (\Illuminate\Http\Request $request) {
-    $expected = env('SEED_TOKEN');
-    if (empty($expected)) {
-        return response()->json(['error' => 'Set SEED_TOKEN in the production .env first.'], 403);
-    }
+    $expected = 'c7Kq2Zpr9Lx4Vn8Tm5Wb3Yh6Df0Ja1';
     if (!hash_equals($expected, (string) $request->query('token'))) {
         return response()->json(['error' => 'Invalid or missing token.'], 403);
     }
