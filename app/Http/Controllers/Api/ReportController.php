@@ -45,6 +45,8 @@ class ReportController extends Controller
     {
         $period = $request->get('period', 'month');
         $limit  = (int) $request->get('limit', 10);
+        // 'qty' = most units sold, 'revenue' = top earners (default, backward compatible).
+        $sort   = $request->get('sort') === 'qty' ? 'qty' : 'revenue';
         [$from, $to] = $this->dateFilter($period);
 
         $items = OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -59,7 +61,7 @@ class ReportController extends Controller
                 DB::raw('SUM(order_items.quantity) as qty'),
                 DB::raw('SUM(order_items.line_total) as revenue')
             )
-            ->orderByDesc('revenue')
+            ->orderByDesc($sort)
             ->limit($limit)
             ->get();
 

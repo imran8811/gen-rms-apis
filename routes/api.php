@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\SalesController;
 use App\Http\Controllers\Api\PurchaseController;
@@ -24,15 +23,18 @@ use App\Http\Controllers\Api\AuthController;
 // Auth (public)
 Route::post('login', [AuthController::class, 'login']);
 
+// NOTE: the menu's source of truth is now genz-admin (genz-admin-apis). The RMS
+// no longer publishes a menu feed; it pulls one via `php artisan menu:sync`.
+
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
 
 Route::post('logout', [AuthController::class, 'logout']);
 Route::get('me', [AuthController::class, 'me']);
 
-// Menu
-Route::apiResource('categories', CategoryController::class);
-Route::apiResource('menu-items', MenuItemController::class);
+// Menu read feed for POS billing (read-only mirror — authored in genz-admin,
+// pulled via `php artisan menu:sync`). Menu management was removed from the RMS.
+Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 
 // Orders / Billing
 Route::get('orders/next-number', [OrderController::class, 'nextNumber']);
