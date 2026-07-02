@@ -19,9 +19,14 @@ use App\Http\Controllers\Api\StaffLeaveController;
 use App\Http\Controllers\Api\StaffAdvanceController;
 use App\Http\Controllers\Api\StaffPayrollController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Integration\WebOrderController;
 
 // Auth (public)
 Route::post('login', [AuthController::class, 'login']);
+
+// Service-to-service: online orders forwarded from genz-web-apis. Authenticated
+// by a shared secret header inside the controller (not Sanctum).
+Route::post('integration/orders', [WebOrderController::class, 'store']);
 
 // NOTE: the menu's source of truth is now genz-admin (genz-admin-apis). The RMS
 // no longer publishes a menu feed; it pulls one via `php artisan menu:sync`.
